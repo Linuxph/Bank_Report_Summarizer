@@ -19,7 +19,10 @@ function Signup() {
     try {
       const response = await authService.signup(username, email, password);
       localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      localStorage.setItem(
+        'user',
+        JSON.stringify({ username: response.username, email: response.email })
+      );
       navigate('/summarizer');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Signup failed');
@@ -49,13 +52,13 @@ function Signup() {
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="username">Full Name</label>
+              <label htmlFor="username">Username</label>
               <input
                 type="text"
                 id="username"
                 value={username}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
+                placeholder="Choose a username"
                 required
               />
             </div>

@@ -18,7 +18,10 @@ function Login() {
     try {
       const response = await authService.login(email, password);
       localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      localStorage.setItem(
+        'user',
+        JSON.stringify({ username: response.username, email: response.email })
+      );
       navigate('/summarizer');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
