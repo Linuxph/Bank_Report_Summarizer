@@ -127,3 +127,35 @@
   margin-top: 1rem;
   font-weight: 500;
 }
+
+.uploading {
+  color: #4ade80;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+.upload-result {
+  width: 100%;
+  margin-top: 2rem;
+  text-align: left;
+}
+
+.upload-result h3 {
+  color: #4ade80;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.upload-result pre {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(74,222,128,0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  color: #fff;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 400px;
+  overflow-y: auto;
+}

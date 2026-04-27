@@ -1,12 +1,15 @@
 import { useState, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import './Summarizer.css'
 
 function Summarizer() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [isDragOver, setIsDragOver] = useState(false)
   const [uploadError, setUploadError] = useState<string>('')
+  const [isUploading, setIsUploading] = useState<boolean>(false)
+  const [uploadResult, setUploadResult] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const navigate = useNavigate()
 
   const acceptedFileTypes = ['application/pdf', 'text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
   const maxFileSize = 10 * 1024 * 1024 // 10MB
@@ -40,8 +43,8 @@ function Summarizer() {
     } else {
       setSelectedFiles(validFiles)
       setUploadError('')
-      // TODO: Implement actual file upload logic here
-      console.log('Files selected:', validFiles)
+      // Upload file to backend
+      uploadFile(validFiles[0])
     }
   }
 
@@ -72,6 +75,36 @@ function Summarizer() {
     const files = e.target.files
     if (files && files.length > 0) {
       handleFiles(files)
+    }
+  }
+
+  const uploadFile = async (file: File) => {
+    setIsUploading(true)
+    setUploadError('')
+    setUploadResult(null)
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const response = await fetch('/process-pdf', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      setUploadResult(result)
+      
+      // Navigate to result page
+      navigate('/result', { state: { result } })
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : 'Upload failed')
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -132,10 +165,17 @@ function Summarizer() {
               <span className="supported-formats">Supported: PDF, CSV, Excel (Max 10MB each)</span>
             </>
           )}
-          {uploadError && <p className="error-message">{uploadError}</p>}
-        </div>
-      </main>
-    </div>
+            {uploadError && <p className="error-message">{uploadError}</p>}
+            {isUploading && <p className="uploading">Uploading and processing...</p>}
+            {uploadResult && (
+              <div className="upload-result">
+                <h3>Processing Result:</h3>
+                <pre>{JSON.stringify(uploadResult, null, 2)}</pre>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
   )
 }
 
