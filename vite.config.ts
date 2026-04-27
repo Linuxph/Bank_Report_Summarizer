@@ -10,22 +10,6 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/process-pdf': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-      },
-      '/download-report': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-      },
-      '/generate-summary': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-      },
-      '/download-summary': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-      },
     },
   },
 })

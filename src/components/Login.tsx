@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import './Auth.css';
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../store/authSlice';
 
 function Login() {
   const navigate = useNavigate();
@@ -9,6 +11,8 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,11 +21,7 @@ function Login() {
 
     try {
       const response = await authService.login(email, password);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem(
-        'user',
-        JSON.stringify({ username: response.username, email: response.email })
-      );
+      dispatch(loginSuccess({ user: response.username, token: response.token }));
       navigate('/summarizer');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');

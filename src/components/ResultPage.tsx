@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import './ResultPage.css'
+import { getAuthHeaders } from '../services/api'
 
 function ResultPage() {
   const navigate = useNavigate()
@@ -33,11 +34,11 @@ function ResultPage() {
 
     try {
       // Download the processed report from backend
-      const response = await fetch('/download-report', {
+      const response = await fetch('/api/reports/download-report', {
         method: 'POST',
-        headers: {
+        headers: getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify({ data: result }),
       })
 
@@ -64,17 +65,13 @@ function ResultPage() {
   const handleGetSummary = () => {
     setIsGeneratingSummary(true)
     setError('')
-
-    // Simulate summary generation delay
-    setTimeout(() => {
-      setIsGeneratingSummary(false)
-      navigate('/summary', {
-        state: {
-          originalData: result,
-          source: 'upload'
-        }
-      })
-    }, 500)
+    navigate('/summary', {
+      state: {
+        originalData: result,
+        source: 'upload'
+      }
+    })
+    setIsGeneratingSummary(false)
   }
 
   if (error && !result) {
@@ -162,11 +159,6 @@ function ResultPage() {
 function ResultDataTable({ result }: { result: any }) {
   const transactions = result?.transactions || result?.data || result?.records || []
   const summary = result?.summary || result
-
-  // Helper to safely get nested values
-  const safeGet = (obj: any, path: string) => {
-    return path.split('.').reduce((acc, key) => acc?.[key], obj)
-  }
 
   // Build summary rows from top-level keys (excluding transactions)
   const summaryRows = Object.keys(summary || {})

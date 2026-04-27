@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import './SummaryPage.css'
+import { getAuthHeaders } from '../services/api'
 
 function SummaryPage() {
   const navigate = useNavigate()
@@ -31,13 +32,13 @@ function SummaryPage() {
     setIsLoading(true)
     setError('')
 
-      try {
+    try {
       // Call backend to generate summary
-      const response = await fetch('/generate-summary', {
+      const response = await fetch('/api/reports/generate-summary', {
         method: 'POST',
-        headers: {
+        headers: getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify({ data }),
       })
 
@@ -48,7 +49,7 @@ function SummaryPage() {
       const result = await response.json()
       setSummary(result)
     } catch (err) {
-      // Fallback: generate a basic summary client-side
+      // Fallback to a summary shaped like the Python API response.
       setSummary(generateClientSummary(data))
     } finally {
       setIsLoading(false)
@@ -56,31 +57,33 @@ function SummaryPage() {
   }
 
   const generateClientSummary = (data: any) => {
-    // Basic client-side summary generation as fallback
+    const metrics = data?.summary || {}
+    const totalDeposits = metrics?.total_deposits ?? 0
+    const totalAdvances = metrics?.total_advances ?? 0
+    const sourceFile = data?.source_file || data?.sourceFile || 'uploaded-file'
+
     return {
-      title: 'Bank Report Summary',
-      generatedAt: new Date().toLocaleString(),
-      totalTransactions: data?.transactions?.length || data?.totalTransactions || 'N/A',
-      totalIncome: data?.totalIncome || data?.income || 'N/A',
-      totalExpenses: data?.totalExpenses || data?.expenses || 'N/A',
-      netBalance: data?.netBalance || data?.balance || 'N/A',
-      keyInsights: [
-        'Report processed successfully',
-        'All transactions categorized',
-        'Expense analysis complete'
-      ],
-      categories: data?.categories || [],
-      rawData: data
+      title: 'Bank Audit Summary Report',
+      generatedAt: new Date().toISOString(),
+      sourceFile,
+      totalTransactions: metrics?.total_rows_analyzed ?? 0,
+      totalIncome: totalDeposits,
+      totalExpenses: totalAdvances,
+      netBalance: totalDeposits - totalAdvances,
+      riskLevel: metrics?.overall_risk || 'Unknown',
+      keyInsights: data?.insights || ['Report processed, but live summary generation endpoint was unavailable.'],
+      metrics,
+      rawData: data,
     }
   }
 
   const handleDownloadSummary = async () => {
       try {
-      const response = await fetch('/download-summary', {
+      const response = await fetch('/api/reports/download-summary', {
         method: 'POST',
-        headers: {
+        headers: getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify({ summary, originalData: summary?.rawData }),
       })
 
@@ -169,6 +172,9 @@ function SummaryPage() {
           {summary?.generatedAt && (
             <p className="generated-at">Generated: {summary.generatedAt}</p>
           )}
+          {summary?.riskLevel && (
+            <p className="generated-at">Risk Level: {summary.riskLevel}</p>
+          )}
         </div>
 
         <div className="summary-cards">
@@ -212,16 +218,14 @@ function SummaryPage() {
           </div>
         )}
 
-        {summary?.categories && summary.categories.length > 0 && (
+        {summary?.metrics && (
           <div className="categories-section">
-            <h2>Categories</h2>
+            <h2>Audit Metrics</h2>
             <div className="categories-list">
-              {summary.categories.map((cat: any, index: number) => (
-                <div key={index} className="category-item">
-                  <span className="category-name">{cat.name || cat}</span>
-                  {cat.amount && (
-                    <span className="category-amount">{cat.amount}</span>
-                  )}
+              {Object.entries(summary.metrics).map(([key, value]) => (
+                <div key={key} className="category-item">
+                  <span className="category-name">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                  <span className="category-amount">{String(value)}</span>
                 </div>
               ))}
             </div>

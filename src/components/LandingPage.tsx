@@ -22,7 +22,7 @@ function LandingPage() {
           <h1>Smart Bank Report Summarization</h1>
           <p>Instantly analyze and summarize your bank statements, transaction history, and financial reports with AI-powered insights.</p>
           <div className="cta-group">
-            <Link to="/signup" className="btn-primary">Start Free Trial</Link>
+            <Link to="/signup" className="btn-primary">Start For Free</Link>
             <Link to="/login" className="btn-secondary">Sign In</Link>
           </div>
         </div>

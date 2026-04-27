@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './Summarizer.css'
+import { getAuthHeaders } from '../services/api'
 
 function Summarizer() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -11,12 +12,12 @@ function Summarizer() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
-  const acceptedFileTypes = ['application/pdf', 'text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+  const acceptedFileTypes = ['application/pdf']
   const maxFileSize = 10 * 1024 * 1024 // 10MB
 
   const validateFile = (file: File): string | null => {
     if (!acceptedFileTypes.includes(file.type)) {
-      return 'Invalid file type. Please upload PDF, CSV, or Excel files only.'
+      return 'Invalid file type. Please upload PDF files only.'
     }
     if (file.size > maxFileSize) {
       return 'File size too large. Maximum file size is 10MB.'
@@ -87,12 +88,29 @@ function Summarizer() {
     formData.append('file', file)
 
     try {
-      const response = await fetch('/process-pdf', {
+      const response = await fetch('/api/reports/upload', {
         method: 'POST',
+        headers: getAuthHeaders(),
         body: formData,
       })
 
       if (!response.ok) {
+        const contentType = response.headers.get('content-type') ?? ''
+        const isJson = contentType.includes('application/json')
+        const payload = isJson ? await response.json() : await response.text()
+
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Your session is not authorized for report upload. Please log in again.')
+        }
+
+        if (isJson && payload && typeof payload === 'object' && 'error' in payload) {
+          throw new Error(String(payload.error))
+        }
+
+        if (typeof payload === 'string' && payload.trim()) {
+          throw new Error(payload)
+        }
+
         throw new Error(`Upload failed: ${response.statusText}`)
       }
 
@@ -102,7 +120,11 @@ function Summarizer() {
       // Navigate to result page
       navigate('/result', { state: { result } })
     } catch (error) {
-      setUploadError(error instanceof Error ? error.message : 'Upload failed')
+      if (error instanceof TypeError) {
+        setUploadError('Cannot reach the backend upload API. Check that Vite, Spring, and the Python analyzer are all running.')
+      } else {
+        setUploadError(error instanceof Error ? error.message : 'Upload failed')
+      }
     } finally {
       setIsUploading(false)
     }
@@ -139,7 +161,7 @@ function Summarizer() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.csv,.xlsx,.xls"
+            accept=".pdf"
             multiple
             style={{ display: 'none' }}
             onChange={handleFileInputChange}
@@ -162,7 +184,7 @@ function Summarizer() {
           ) : (
             <>
               <p>Drop files here or click to upload</p>
-              <span className="supported-formats">Supported: PDF, CSV, Excel (Max 10MB each)</span>
+              <span className="supported-formats">Supported: PDF (Max 10MB)</span>
             </>
           )}
             {uploadError && <p className="error-message">{uploadError}</p>}
