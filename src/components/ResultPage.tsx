@@ -1,24 +1,47 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import './ResultPage.css'
-import { getAuthHeaders } from '../services/api'
 
+const AI_BASE = '/ai'
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+function fmt(n: number | null | undefined, decimals = 2) {
+  if (n == null || isNaN(n)) return '—'
+  return n.toLocaleString('en-IN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+}
+
+function riskColor(risk: string) {
+  const r = (risk || '').toUpperCase()
+  if (r === 'HIGH') return '#ef4444'
+  if (r === 'MODERATE') return '#fbbf24'
+  if (r === 'LOW') return '#4ade80'
+  return '#94a3b8'
+}
+
+function rowRiskColor(level: string) {
+  const l = (level || '').toLowerCase()
+  if (l === 'high') return 'risk-high'
+  if (l === 'moderate') return 'risk-moderate'
+  if (l === 'low') return 'risk-low'
+  return ''
+}
+
+// ── main component ────────────────────────────────────────────────────────────
 function ResultPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const [result, setResult] = useState<any>(null)
+  const [filename, setFilename] = useState<string>('report')
   const [isDownloading, setIsDownloading] = useState(false)
-  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
   const [error, setError] = useState<string>('')
 
   useEffect(() => {
-    // Get result from navigation state or localStorage
     const state = location.state as any
     if (state?.result) {
       setResult(state.result)
+      setFilename(state.filename || 'report')
       localStorage.setItem('lastUploadResult', JSON.stringify(state.result))
     } else {
-      // Try to get from localStorage
       const saved = localStorage.getItem('lastUploadResult')
       if (saved) {
         setResult(JSON.parse(saved))
@@ -28,29 +51,34 @@ function ResultPage() {
     }
   }, [location])
 
+  const handleGetSummary = () => {
+    navigate('/summary', { state: { originalData: result, filename } })
+  }
+
+  /** Download the full analysis as a PDF via the AI server */
   const handleDownloadReport = async () => {
+    if (!result) return
     setIsDownloading(true)
     setError('')
 
     try {
-      // Download the processed report from backend
-      const response = await fetch('/api/reports/download-report', {
+      const response = await fetch(`${AI_BASE}/generate-pdf`, {
         method: 'POST',
-        headers: getAuthHeaders({
-          'Content-Type': 'application/json',
-        }),
-        body: JSON.stringify({ data: result }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'report', data: result, filename }),
       })
 
       if (!response.ok) {
-        throw new Error(`Download failed: ${response.statusText}`)
+        let msg = `Download failed (HTTP ${response.status})`
+        try { const j = await response.json(); if (j?.detail) msg = j.detail } catch { /* */ }
+        throw new Error(msg)
       }
 
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `bank_report_${new Date().getTime()}.pdf`
+      a.download = `bank_audit_report_${Date.now()}.pdf`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -62,31 +90,20 @@ function ResultPage() {
     }
   }
 
-  const handleGetSummary = () => {
-    setIsGeneratingSummary(true)
-    setError('')
-    navigate('/summary', {
-      state: {
-        originalData: result,
-        source: 'upload'
-      }
-    })
-    setIsGeneratingSummary(false)
-  }
-
   if (error && !result) {
     return (
       <div className="result-page">
         <div className="error-container">
           <h2>Error</h2>
           <p>{error}</p>
-          <Link to="/summarizer" className="btn btn-primary">
-            Go Back to Upload
-          </Link>
+          <Link to="/summarizer" className="btn btn-primary">Go Back to Upload</Link>
         </div>
       </div>
     )
   }
+
+  const analysis = result?.analysis || {}
+  const rows: any[] = analysis?.rows || []
 
   return (
     <div className="result-page">
@@ -107,47 +124,106 @@ function ResultPage() {
       </header>
 
       <main className="result-content">
-        <h1>Processing Result</h1>
-        <p>Your bank report has been processed successfully</p>
-
-        <div className="result-actions">
-          <button
-            className="btn btn-primary"
-            onClick={handleGetSummary}
-            disabled={isGeneratingSummary || !result}
-          >
-            {isGeneratingSummary ? (
-              <span>Generating Summary...</span>
-            ) : (
-              <span>Get Summary Report</span>
-            )}
-          </button>
-
-          <button
-            className="btn btn-secondary"
-            onClick={handleDownloadReport}
-            disabled={isDownloading || !result}
-          >
-            {isDownloading ? (
-              <span>Downloading...</span>
-            ) : (
-              <span>Download Report</span>
-            )}
-          </button>
+        <div className="result-hero">
+          <h1>Analysis Complete</h1>
+          {filename && <p className="result-filename">📄 {filename}</p>}
+          <p className="result-sub">
+            Found <strong>{result?.financial_tables_found ?? 0}</strong> financial tables ·{' '}
+            <strong>{result?.structured_rows ?? 0}</strong> structured rows extracted
+          </p>
         </div>
 
-        <div className="result-data">
-          <h2>Processed Data</h2>
-          <div className="result-table-container">
-            <ResultDataTable result={result} />
+        {/* ── Risk Banner ── */}
+        {analysis?.overall_risk && (
+          <div className="risk-banner" style={{ '--risk-color': riskColor(analysis.overall_risk) } as any}>
+            <span className="risk-label">Overall Risk</span>
+            <span className="risk-value" style={{ color: riskColor(analysis.overall_risk) }}>
+              {analysis.overall_risk}
+            </span>
           </div>
+        )}
+
+        {/* ── KPI Cards ── */}
+        <div className="kpi-grid">
+          <KpiCard label="Total Deposits" value={`₹ ${fmt(analysis?.total_deposits)}`} />
+          <KpiCard label="Total Advances" value={`₹ ${fmt(analysis?.total_advances)}`} />
+          <KpiCard label="Total Investments" value={`₹ ${fmt(analysis?.total_investments)}`} />
+          <KpiCard
+            label="Loan-to-Deposit Ratio"
+            value={analysis?.overall_ldr != null ? `${(analysis.overall_ldr * 100).toFixed(2)}%` : '—'}
+            highlight={analysis?.overall_ldr > 0.9}
+          />
+          <KpiCard
+            label="Investment Ratio"
+            value={analysis?.overall_inv_ratio != null ? `${(analysis.overall_inv_ratio * 100).toFixed(2)}%` : '—'}
+          />
+          <KpiCard label="Rows Analysed" value={String(analysis?.row_count ?? 0)} />
         </div>
+
+        {/* ── Action Buttons ── */}
+        <div className="result-actions">
+          <button className="btn btn-primary" onClick={handleGetSummary} disabled={!result}>
+            🤖 Generate AI Summary
+          </button>
+          <button className="btn btn-secondary" onClick={handleDownloadReport} disabled={isDownloading || !result}>
+            {isDownloading ? '⏳ Generating PDF…' : '⬇ Download Report PDF'}
+          </button>
+        </div>
+
+        {error && <p className="inline-error">{error}</p>}
+
+        {/* ── Detailed Rows Table ── */}
+        {rows.length > 0 && (
+          <div className="result-data">
+            <h2>Row-level Analysis</h2>
+            <div className="table-wrapper">
+              <table className="result-table">
+                <thead>
+                  <tr>
+                    <th>Page</th>
+                    <th>Deposits</th>
+                    <th>Advances</th>
+                    <th>Investments</th>
+                    <th>LDR</th>
+                    <th>Inv. Ratio</th>
+                    <th>Risk</th>
+                    <th>Observations</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row: any, i: number) => (
+                    <tr key={i}>
+                      <td>{row.page}</td>
+                      <td>{fmt(row.deposits)}</td>
+                      <td>{fmt(row.advances)}</td>
+                      <td>{fmt(row.investments)}</td>
+                      <td>{row.LDR != null ? `${(row.LDR * 100).toFixed(1)}%` : '—'}</td>
+                      <td>{row.INV_RATIO != null ? `${(row.INV_RATIO * 100).toFixed(1)}%` : '—'}</td>
+                      <td>
+                        <span className={`risk-badge ${rowRiskColor(row.risk_level)}`}>
+                          {row.risk_level || '—'}
+                        </span>
+                      </td>
+                      <td className="obs-cell">{row.observations || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {rows.length === 0 && result && (
+          <div className="no-data">
+            <p>No high-value financial tables were detected in this PDF.</p>
+            <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', opacity: 0.6 }}>
+              The AI looks for tables containing keywords like Deposits, Advances, NPA, Investments with at least 15 numeric values.
+            </p>
+          </div>
+        )}
 
         <div className="result-footer">
-          <button
-            className="btn btn-outline"
-            onClick={() => navigate('/summarizer')}
-          >
+          <button className="btn btn-outline" onClick={() => navigate('/summarizer')}>
             Upload Another File
           </button>
         </div>
@@ -156,94 +232,11 @@ function ResultPage() {
   )
 }
 
-function ResultDataTable({ result }: { result: any }) {
-  const transactions = result?.transactions || result?.data || result?.records || []
-  const summary = result?.summary || result
-
-  // Build summary rows from top-level keys (excluding transactions)
-  const summaryRows = Object.keys(summary || {})
-    .filter(key => !['transactions', 'data', 'records', 'rawData'].includes(key))
-    .map(key => ({
-      field: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      value: typeof summary[key] === 'object' ? JSON.stringify(summary[key]) : String(summary[key])
-    }))
-
-  // For transactions, show a table
-  const hasTransactions = Array.isArray(transactions) && transactions.length > 0
-
-  if (hasTransactions) {
-    const columns = Object.keys(transactions[0] || {})
-
-    return (
-      <div className="result-table-wrapper">
-        {/* Summary section */}
-        {summaryRows.length > 0 && (
-          <div className="summary-grid">
-            {summaryRows.map((row, i) => (
-              <div key={i} className="summary-item">
-                <span className="summary-label">{row.field}</span>
-                <span className="summary-value">{row.value}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <h3>Transactions</h3>
-        <div className="table-wrapper">
-          <table className="result-table">
-            <thead>
-              <tr>
-                {columns.map(col => (
-                  <th key={col}>{col.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((row: any, i: number) => (
-                <tr key={i}>
-                  {columns.map(col => (
-                    <td key={col} title={String(row[col])}>
-                      {String(row[col])}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    )
-  }
-
-  // No transactions - show summary rows as table
-  if (summaryRows.length > 0) {
-    return (
-      <div className="table-wrapper">
-        <table className="result-table">
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {summaryRows.map((row, i) => (
-              <tr key={i}>
-                <td>{row.field}</td>
-                <td title={row.value}>{row.value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )
-  }
-
-  // Fallback
+function KpiCard({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="no-data">
-      <p>No structured data available</p>
-      <pre>{JSON.stringify(result, null, 2)}</pre>
+    <div className={`kpi-card ${highlight ? 'kpi-highlight' : ''}`}>
+      <span className="kpi-label">{label}</span>
+      <span className="kpi-value">{value}</span>
     </div>
   )
 }

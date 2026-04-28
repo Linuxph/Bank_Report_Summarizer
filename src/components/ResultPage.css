@@ -418,3 +418,129 @@
     padding: 1rem;
   }
 }
+
+/* ── Result Hero ── */
+.result-hero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.result-filename {
+  color: rgba(255,255,255,0.55);
+  font-size: 0.95rem;
+  margin: 0.25rem 0 0;
+}
+
+.result-sub {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+/* ── Risk Banner ── */
+.risk-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--risk-color, rgba(255,255,255,0.15));
+  border-radius: 12px;
+  padding: 1rem 1.75rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 2.5rem;
+}
+
+.risk-label {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.5);
+}
+
+.risk-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* ── KPI Grid ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  margin-bottom: 2.5rem;
+}
+
+.kpi-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(74,222,128,0.15);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+
+.kpi-card:hover {
+  border-color: rgba(74,222,128,0.4);
+  background: rgba(74,222,128,0.05);
+  transform: translateY(-2px);
+}
+
+.kpi-card.kpi-highlight {
+  border-color: rgba(251,191,36,0.5);
+  background: rgba(251,191,36,0.05);
+}
+
+.kpi-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.45);
+}
+
+.kpi-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  word-break: break-word;
+}
+
+/* ── Risk Badges in table ── */
+.risk-badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.risk-badge.risk-high   { background: rgba(239,68,68,0.2);  color: #ef4444; }
+.risk-badge.risk-moderate { background: rgba(251,191,36,0.2); color: #fbbf24; }
+.risk-badge.risk-low    { background: rgba(74,222,128,0.2); color: #4ade80; }
+
+.obs-cell {
+  max-width: 220px;
+  white-space: normal;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.6);
+}
+
+/* ── Inline error ── */
+.inline-error {
+  color: #fca5a5;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 1rem;
+}
+

@@ -270,3 +270,130 @@
     margin-top: 0.5rem;
   }
 }
+
+/* ── Summary Hero ── */
+.summary-hero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.ai-badge {
+  display: inline-block;
+  background: rgba(74,222,128,0.12);
+  border: 1px solid rgba(74,222,128,0.3);
+  border-radius: 999px;
+  padding: 0.35rem 1rem;
+  font-size: 0.8rem;
+  color: #4ade80;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.summary-filename {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0.25rem;
+}
+
+/* ── KPI Strip ── */
+.summary-kpi-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 2.5rem;
+}
+
+.kpi-pill {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: 999px;
+  padding: 0.5rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.2s;
+}
+
+.kpi-pill:hover {
+  background: rgba(74,222,128,0.07);
+}
+
+.kpi-pill-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.45);
+}
+
+.kpi-pill-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* ── AI Report Body ── */
+.ai-report-body {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  margin-bottom: 3rem;
+}
+
+.report-section {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(74,222,128,0.1);
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  transition: border-color 0.2s;
+}
+
+.report-section:hover {
+  border-color: rgba(74,222,128,0.25);
+}
+
+.section-heading {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #4ade80;
+  margin: 0 0 1rem;
+  font-weight: 700;
+}
+
+.section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.text-line {
+  color: rgba(255,255,255,0.82);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.bullet-line {
+  color: rgba(255,255,255,0.82);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  padding-left: 1rem;
+  border-left: 2px solid rgba(74,222,128,0.3);
+  margin: 0;
+}
+
+.raw-summary {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: 10px;
+  padding: 1.5rem;
+  color: rgba(255,255,255,0.8);
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  line-height: 1.7;
+  width: 100%;
+}
+
