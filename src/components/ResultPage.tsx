@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import './ResultPage.css'
 
-const AI_BASE = '/ai'
+const AI_BASE = import.meta.env.VITE_AI_BASE_URL ?? '/ai'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function fmt(n: number | null | undefined, decimals = 2) {

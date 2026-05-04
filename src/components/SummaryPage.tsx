@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import './SummaryPage.css'
 
-const AI_BASE = '/ai'
+const AI_BASE = import.meta.env.VITE_AI_BASE_URL ?? '/ai'
 
 function riskColor(risk: string) {
   const r = (risk || '').toUpperCase()

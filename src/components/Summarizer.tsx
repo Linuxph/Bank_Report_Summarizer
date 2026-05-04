@@ -2,7 +2,9 @@ import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './Summarizer.css'
 
-const AI_BASE = '/ai'
+// Set VITE_AI_BASE_URL to your Render AI service URL in production
+// Leave empty in dev — Vite proxy rewrites /ai/* → http://localhost:8000/*
+const AI_BASE = import.meta.env.VITE_AI_BASE_URL ?? '/ai'
 
 interface ProgressLine {
   icon: string

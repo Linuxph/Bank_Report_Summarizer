@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://bars-backend.onrender.com/api/:path*"
+    },
+    {
+      "source": "/ai/:path*",
+      "destination": "https://bars-ai-service.onrender.com/:path*"
+    }
+  ]
+}
