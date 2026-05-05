@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://bars-backend.onrender.com/api/:path*"
+      "destination": "https://bank-audit-report-summarizer-be.onrender.com/api/:path*"
     },
     {
       "source": "/ai/:path*",
-      "destination": "https://bars-ai-service.onrender.com/:path*"
+      "destination": "https://bank-audit-report-summariser.onrender.com/:path*"
     }
   ]
 }
