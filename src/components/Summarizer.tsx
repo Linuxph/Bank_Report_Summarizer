@@ -167,9 +167,12 @@ function Summarizer() {
     } catch (error) {
       if (error instanceof TypeError) {
         setUploadError(
-          'Cannot reach the AI server at localhost:8000. ' +
-          'Start it with: cd AI && python -m uvicorn main:app --port 8000 --reload'
+          'Cannot reach the AI server. ' +
+          (import.meta.env.DEV
+            ? 'Start it with: cd AI && python -m uvicorn main:app --port 8000 --reload'
+            : 'The AI service may be starting up — please wait a moment and try again.')
         )
+
       } else {
         setUploadError(error instanceof Error ? error.message : 'Upload failed')
       }
