@@ -7,6 +7,10 @@
     {
       "source": "/ai/:path*",
       "destination": "https://bank-audit-report-summariser.onrender.com/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
